@@ -8,16 +8,6 @@ A single-page dashboard that showcases GitHub repository language statistics wit
 - **Language breakdown visualization** using animated progress bars and color-coded badges.
 - **Responsive design** that adapts the dashboard for desktop, tablet, and mobile viewports.
 
-## Getting Started
-This project is a static site and does not require a build step.
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/<your-username>/Github-Language-Detector.git
-   cd Github-Language-Detector
-   ```
-2. Open `index.html` in your preferred browser. No additional tooling is required.
-
 ## Usage
 1. Enter a GitHub username in the input field.
 2. Click **Generate Card** to fetch repositories for that user.
