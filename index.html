@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Most Used Languages – GitHub Card</title>
+  <style>
+    :root{
+      --bg:#0b1220; /* page bg */
+      --panel:#121a2b; /* card bg */
+      --panel-border:#2a3350;
+      --text:#d7e3ff;
+      --muted:#8aa0c6;
+      --accent:#6ea8fe;
+      --chip:#1e2944;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(1200px 600px at 20% -10%, #1a2440, transparent), var(--bg); font-family:system-ui, -apple-system, Segoe UI, Roboto, Inter, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color:var(--text)
+    }
+    .card{
+      width:min(860px, 92vw); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)), var(--panel); border:1px solid var(--panel-border); border-radius:24px; padding:26px 28px 24px; box-shadow:var(--shadow)
+    }
+    h1{font-size:28px; margin:0 0 18px; letter-spacing:.2px}
+    .controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center}
+    input, button{background:var(--chip); color:var(--text); border:1px solid #304068; border-radius:10px; padding:10px 12px; font-size:14px}
+    button{cursor:pointer}
+    button:hover{filter:brightness(1.08)}
+    .notice{color:var(--muted); font-size:12px}
+
+    /* Progress bar */
+    .bar{height:16px; width:100%; background:#0f1629; border:1px solid #2b375a; border-radius:12px; overflow:hidden; display:flex}
+    .bar > span{height:100%}
+
+    /* Legend */
+    .legend{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px 18px; margin-top:14px}
+    .legend-item{display:flex; align-items:center; gap:8px; font-size:14px}
+    .dot{width:10px; height:10px; border-radius:99px; flex:none; border:1px solid rgba(255,255,255,.25)}
+
+    .footer{display:flex; justify-content:space-between; margin-top:16px; color:var(--muted); font-size:12px}
+    .error{color:#ff9aa2; font-size:14px; margin-top:8px}
+
+    @media (max-width:640px){
+      h1{font-size:22px}
+      .legend{grid-template-columns:repeat(2, minmax(0,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Most Used Languages</h1>
+
+    <div class="controls">
+      <input id="username" placeholder="GitHub username" />
+      <input id="token" placeholder="Optional: GitHub token (ghp_...)" />
+      <button id="load">Fetch</button>
+      <span class="notice">Tip: add <code>?user=YOUR_NAME</code> to the URL.</span>
+    </div>
+
+    <div class="bar" id="bar"></div>
+
+    <div class="legend" id="legend"></div>
+
+    <div class="footer">
+      <span id="summary">Waiting for data…</span>
+      <span id="rate"></span>
+    </div>
+
+    <div class="error" id="error" hidden></div>
+  </div>
+
+  <script>
+  // ---- Config ----
+  const LANGUAGE_COLORS = {
+    Python: "#3572A5", TypeScript: "#3178c6", JavaScript: "#f1e05a", HTML: "#e34c26", CSS: "#563d7c", "C++": "#f34b7d",
+    Kotlin: "#A97BFF", Dart: "#00B4AB", Jupyter: "#DA5B0B", Shell:"#89e051", Go:"#00ADD8", Rust:"#dea584", Java:"#b07219",
+  };
+
+  const bar = document.getElementById('bar');
+  const legend = document.getElementById('legend');
+  const summary = document.getElementById('summary');
+  const rate = document.getElementById('rate');
+  const errorBox = document.getElementById('error');
+
+  async function fetchJSON(url, token){
+    const res = await fetch(url, { headers: token ? {Authorization: `token ${token}`} : {} });
+    rate.textContent = res.headers.has('x-ratelimit-remaining') ? `rate left: ${res.headers.get('x-ratelimit-remaining')}` : '';
+    if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  function fmtPct(n){return (Math.round(n * 10000) / 100).toFixed(2) + '%'}
+
+  function render(data){
+    // data: [{name, bytes}]
+    data.sort((a,b)=>b.bytes-a.bytes);
+    const total = data.reduce((s,d)=>s+d.bytes,0);
+    bar.innerHTML = '';
+    legend.innerHTML = '';
+    errorBox.hidden = true;
+
+    if(total === 0){
+      summary.textContent = 'No language data found.';
+      return;
+    }
+
+    // progress bar segments
+    data.forEach(d=>{
+      const span = document.createElement('span');
+      const pct = d.bytes/total*100;
+      span.style.width = pct + '%';
+      span.style.background = LANGUAGE_COLORS[d.name] || '#888';
+      span.title = `${d.name} ${fmtPct(d.bytes/total)}`;
+      bar.appendChild(span);
+    });
+
+    // legend items (top 12)
+    data.slice(0,12).forEach(d=>{
+      const row = document.createElement('div');
+      row.className='legend-item';
+      row.innerHTML = `<span class="dot" style="background:${LANGUAGE_COLORS[d.name]||'#888'}"></span>
+        <span>${d.name} ${fmtPct(d.bytes/total)}</span>`;
+      legend.appendChild(row);
+    });
+
+    summary.textContent = `${data.length} languages · ${Intl.NumberFormat().format(total)} bytes analyzed`;
+  }
+
+  async function load(username, token){
+    if(!username){ errorBox.hidden=false; errorBox.textContent='Enter a GitHub username.'; return; }
+    summary.textContent = 'Fetching repos…';
+    try{
+      // Get all public repos (handle pagination up to 5 pages ~ 500 repos)
+      let page=1, repos=[]; const perPage=100;
+      while(page<=5){
+        const batch = await fetchJSON(`https://api.github.com/users/${username}/repos?per_page=${perPage}&page=${page}`, token);
+        repos = repos.concat(batch);
+        if(batch.length < perPage) break; // no more pages
+        page++;
+      }
+      if(repos.length === 0){ render([]); return; }
+
+      // Fetch languages for each repo (languages_url)
+      summary.textContent = `Fetching language stats for ${repos.length} repos…`;
+      const results = await Promise.allSettled(
+        repos.map(r => fetchJSON(r.languages_url, token))
+      );
+
+      const totals = new Map();
+      results.forEach(r=>{
+        if(r.status === 'fulfilled'){
+          for(const [lang, bytes] of Object.entries(r.value)){
+            totals.set(lang, (totals.get(lang)||0) + bytes);
+          }
+        }
+      });
+
+      const data = Array.from(totals, ([name, bytes])=>({name, bytes}));
+      render(data);
+    }catch(err){
+      errorBox.hidden=false; errorBox.textContent = err.message + ' — try adding a GitHub token.';
+      console.error(err);
+    }
+  }
+
+  // UI wiring
+  document.getElementById('load').addEventListener('click',()=>{
+    load(document.getElementById('username').value.trim(), document.getElementById('token').value.trim());
+  });
+
+  // Autoload from query param ?user=NAME and optional ?token=TOKEN
+  const params = new URLSearchParams(location.search);
+  const userQP = params.get('user');
+  const tokenQP = params.get('token');
+  if(userQP){
+    document.getElementById('username').value = userQP;
+    if(tokenQP) document.getElementById('token').value = tokenQP;
+    load(userQP, tokenQP||'');
+  }
+  </script>
+</body>
+</html>
