@@ -6,69 +6,350 @@
   <title>Most Used Languages – GitHub Card</title>
   <style>
     :root{
-      --bg:#0b1220; /* page bg */
-      --panel:#121a2b; /* card bg */
-      --panel-border:#2a3350;
-      --text:#d7e3ff;
-      --muted:#8aa0c6;
-      --accent:#6ea8fe;
-      --chip:#1e2944;
-      --radius:16px;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#000;
+      --bg-soft:#121212;
+      --panel:#181818;
+      --panel-soft:#1f1f1f;
+      --text:#fff;
+      --muted:#b3b3b3;
+      --accent:#1db954;
+      --border:#282828;
+      --radius:18px;
+      --shadow:0 30px 60px rgba(0,0,0,.45);
     }
+
     *{box-sizing:border-box}
+
     body{
-      margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(1200px 600px at 20% -10%, #1a2440, transparent), var(--bg); font-family:system-ui, -apple-system, Segoe UI, Roboto, Inter, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color:var(--text)
+      margin:0;
+      min-height:100vh;
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
     }
-    .card{
-      width:min(860px, 92vw); background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)), var(--panel); border:1px solid var(--panel-border); border-radius:24px; padding:26px 28px 24px; box-shadow:var(--shadow)
+
+    .app{
+      display:flex;
+      flex:1;
+      min-height:100vh;
+      background:radial-gradient(1200px 600px at 12% -10%, rgba(30,215,96,.18), transparent),
+        radial-gradient(900px 600px at 110% 0%, rgba(29,185,84,.2), transparent),
+        var(--bg);
     }
-    h1{font-size:28px; margin:0 0 18px; letter-spacing:.2px}
-    .controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center}
-    input, button{background:var(--chip); color:var(--text); border:1px solid #304068; border-radius:10px; padding:10px 12px; font-size:14px}
-    button{cursor:pointer}
-    button:hover{filter:brightness(1.08)}
-    .notice{color:var(--muted); font-size:12px}
 
-    /* Progress bar */
-    .bar{height:16px; width:100%; background:#0f1629; border:1px solid #2b375a; border-radius:12px; overflow:hidden; display:flex}
-    .bar > span{height:100%}
+    .sidebar{
+      width:240px;
+      padding:28px 24px 36px;
+      background:#000;
+      border-right:1px solid #111;
+      display:flex;
+      flex-direction:column;
+      gap:28px;
+    }
 
-    /* Legend */
-    .legend{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px 18px; margin-top:14px}
-    .legend-item{display:flex; align-items:center; gap:8px; font-size:14px}
-    .dot{width:10px; height:10px; border-radius:99px; flex:none; border:1px solid rgba(255,255,255,.25)}
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:.5px;
+    }
 
-    .footer{display:flex; justify-content:space-between; margin-top:16px; color:var(--muted); font-size:12px}
-    .error{color:#ff9aa2; font-size:14px; margin-top:8px}
+    .logo::before{
+      content:"";
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 8px 30px rgba(30,215,96,.45);
+    }
 
-    @media (max-width:640px){
-      h1{font-size:22px}
-      .legend{grid-template-columns:repeat(2, minmax(0,1fr))}
+    nav{
+      display:grid;
+      gap:8px;
+      font-size:15px;
+    }
+
+    nav a{
+      color:var(--muted);
+      text-decoration:none;
+      font-weight:600;
+      padding:10px 12px;
+      border-radius:10px;
+      transition:color .2s ease, background .2s ease;
+    }
+
+    nav a.active,
+    nav a:hover{
+      color:var(--text);
+      background:rgba(255,255,255,.08);
+    }
+
+    .playlist{
+      margin-top:auto;
+      font-size:12px;
+      line-height:1.6;
+      color:var(--muted);
+      border-top:1px solid rgba(255,255,255,.04);
+      padding-top:18px;
+    }
+
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:32px;
+      padding:38px 44px 56px;
+      background:linear-gradient(180deg, rgba(18,18,18,.85), rgba(18,18,18,.98));
+      overflow:auto;
+    }
+
+    .hero{
+      position:relative;
+      background:linear-gradient(140deg, rgba(29,185,84,.6), rgba(25,20,20,.9) 60%);
+      border-radius:calc(var(--radius) + 8px);
+      padding:38px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      width:300px;
+      height:300px;
+      background:radial-gradient(circle, rgba(30,215,96,.45), transparent 60%);
+      right:-120px;
+      top:-120px;
+      filter:blur(0px);
+    }
+
+    .hero small{
+      text-transform:uppercase;
+      letter-spacing:3px;
+      font-weight:600;
+      color:rgba(255,255,255,.8);
+    }
+
+    .hero h1{
+      margin:14px 0 16px;
+      font-size:46px;
+      line-height:1.05;
+      letter-spacing:-1px;
+    }
+
+    .hero p{
+      margin:0;
+      font-size:16px;
+      max-width:560px;
+      color:rgba(255,255,255,.88);
+    }
+
+    .panel{
+      background:var(--panel);
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      padding:30px;
+      box-shadow:0 18px 40px rgba(0,0,0,.45);
+      display:grid;
+      gap:22px;
+    }
+
+    h2{
+      margin:0;
+      font-size:22px;
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+    }
+
+    .controls input{
+      background:var(--panel-soft);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:999px;
+      padding:10px 18px;
+      font-size:14px;
+      min-width:220px;
+      outline:none;
+      transition:border .2s ease, background .2s ease;
+    }
+
+    .controls input:focus{
+      border-color:var(--accent);
+      background:rgba(29,185,84,.12);
+    }
+
+    .controls button{
+      background:var(--accent);
+      color:#000;
+      border:none;
+      border-radius:999px;
+      padding:11px 28px;
+      font-size:14px;
+      font-weight:700;
+      letter-spacing:.4px;
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .2s ease;
+      box-shadow:0 12px 24px rgba(29,185,84,.3);
+    }
+
+    .controls button:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 34px rgba(29,185,84,.38);
+    }
+
+    .notice{
+      flex:1 1 100%;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .notice code{
+      background:rgba(255,255,255,.05);
+      padding:3px 6px;
+      border-radius:6px;
+      color:var(--text);
+      font-family:"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    .bar{
+      height:18px;
+      width:100%;
+      background:var(--panel-soft);
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.06);
+      display:flex;
+    }
+
+    .bar > span{height:100%;}
+
+    .legend{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+      gap:14px 18px;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:14px;
+      font-weight:500;
+      color:rgba(255,255,255,.9);
+    }
+
+    .dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);
+    }
+
+    .footer{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 18px;
+      justify-content:space-between;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .error{
+      color:#ff7f8a;
+      font-size:14px;
+      background:rgba(255,127,138,.12);
+      border:1px solid rgba(255,127,138,.35);
+      padding:10px 14px;
+      border-radius:10px;
+    }
+
+    @media (max-width:1024px){
+      .hero h1{font-size:38px;}
+      .main{padding:28px 24px 48px;}
+    }
+
+    @media (max-width:900px){
+      body{display:block;}
+      .app{flex-direction:column; min-height:100vh;}
+      .sidebar{
+        width:100%;
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        gap:18px;
+        border-right:none;
+        border-bottom:1px solid #111;
+      }
+      nav{grid-auto-flow:column; justify-content:flex-start; overflow-x:auto; padding-bottom:6px;}
+      nav a{white-space:nowrap;}
+      .playlist{display:none;}
+    }
+
+    @media (max-width:620px){
+      .controls{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .controls input,
+      .controls button{width:100%;}
+      .hero{padding:28px;}
+      .hero h1{font-size:32px;}
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Most Used Languages</h1>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">Language Wrapped</div>
+      <nav>
+        <a class="active" href="#">Overview</a>
+        <a href="#">Insights</a>
+        <a href="#">Playlists</a>
+        <a href="#">Radio</a>
+      </nav>
+      <div class="playlist">
+        Curated for developers.
+        <br />Drop in a GitHub username to remix their language stats.
+      </div>
+    </aside>
 
-    <div class="controls">
-      <input id="username" placeholder="GitHub username" />
-      <input id="token" placeholder="Optional: GitHub token (ghp_...)" />
-      <button id="load">Fetch</button>
-      <span class="notice">Tip: add <code>?user=YOUR_NAME</code> to the URL.</span>
-    </div>
+    <main class="main">
+      <header class="hero">
+        <small>GitHub Language Wrapped</small>
+        <h1>Discover your repository soundscape</h1>
+        <p>Visualize the languages powering a GitHub profile with a Spotify-inspired dashboard. Fetch their top languages and share the vibe.</p>
+      </header>
 
-    <div class="bar" id="bar"></div>
+      <section class="panel">
+        <h2>Language mix</h2>
+        <div class="controls">
+          <input id="username" placeholder="GitHub username" />
+          <input id="token" placeholder="Optional: GitHub token (ghp_...)" />
+          <button id="load">Fetch</button>
+          <span class="notice">Tip: add <code>?user=YOUR_NAME</code> to the URL.</span>
+        </div>
 
-    <div class="legend" id="legend"></div>
+        <div class="bar" id="bar"></div>
 
-    <div class="footer">
-      <span id="summary">Waiting for data…</span>
-      <span id="rate"></span>
-    </div>
+        <div class="legend" id="legend"></div>
 
-    <div class="error" id="error" hidden></div>
+        <div class="footer">
+          <span id="summary">Waiting for data…</span>
+          <span id="rate"></span>
+        </div>
+
+        <div class="error" id="error" hidden></div>
+      </section>
+    </main>
   </div>
 
   <script>
